@@ -2,4 +2,4 @@ REMEMBER TO TYPE THE PORT IN THE OPTIONS MENU
 IP GOES IN THE JOIN MENU
 
 
-1. 147.185.221.16:17429
+1. 147.185.221.16:17429 - This server will only be up for a couple hours a day, as its hosted from my PC. I'm using playit.gg, so dont try and ddos the ip.
