@@ -7,13 +7,16 @@
 #include <glui/glui.h>
 #include <iostream>
 
-phisics::MapData map;
+phisics::MapData ruins;
+phisics::MapData field;
+phisics::MapData facility;
 
+phisics::MapData map;
 ENetPeer *server = {};
 int32_t cid = {};
 bool joined = false;
 ENetHost *client;
-
+static bool isConnected = false;
 
 std::unordered_map<int32_t, phisics::Entity> players;
 
@@ -47,9 +50,21 @@ glm::ivec2 getSpawnPosition()
 void resetClient()
 {
 
-	if (!map.load(RESOURCES_PATH "ruins.bin"))
+	if (!ruins.load(RESOURCES_PATH "ruins.bin"))
 	{
-		return ;
+		return;
+	}
+	if (!field.load(RESOURCES_PATH "field.bin"))
+	{
+		return;
+	}
+	if (!facility.load(RESOURCES_PATH "facility.bin"))
+	{
+		return;
+	}
+	if (!map.load(RESOURCES_PATH "empty.bin"))
+	{
+		return;
 	}
 
 	players.clear();
@@ -102,9 +117,10 @@ bool connectToServer(ENetHost *&client, ENetPeer *&server, int32_t &cid, std::st
 
 	//client, adress, channels, data to send rightAway
 	server = enet_host_connect(client, &adress, SERVER_CHANNELS, 0);
-
+	std::cout << "Connect\n";
 	if (server == nullptr)
 	{
+		std::cout << "Attempt failed\n";
 		return false;
 	}
 
@@ -129,23 +145,24 @@ bool connectToServer(ENetHost *&client, ENetPeer *&server, int32_t &cid, std::st
 		size_t size;
 		auto data = parsePacket(event, p, size);
 
-		if (p.header != headerReceiveCIDAndData)
+		if (p.header == headerReceiveCIDAndData)
 		{
+			cid = p.cid;
+
+			glm::vec3 color = *(glm::vec3*)data;
+			auto e = phisics::Entity();
+			e.pos = getSpawnPosition();
+			e.lastPos = e.pos;
+			e.color = color;
+			memcpy(e.name, playerName, playerNameSize);
+			players[cid] = e;
+
+			sendPlayerData(e, true);
+		}
+		else {
 			enet_peer_reset(server);
 			return false;
 		}
-
-		cid = p.cid;
-
-		glm::vec3 color = *(glm::vec3 *)data;
-		auto e = phisics::Entity();
-		e.pos = getSpawnPosition();
-		e.lastPos = e.pos;
-		e.color = color;
-		memcpy(e.name, playerName, playerNameSize);
-		players[cid] = e;
-
-		sendPlayerData(e, true);
 
 		std::cout << "received cid: " << cid << "\n";
 		enet_packet_destroy(event.packet);
@@ -153,10 +170,12 @@ bool connectToServer(ENetHost *&client, ENetPeer *&server, int32_t &cid, std::st
 	}
 	else
 	{
+		std::cout << "succeed\n";
 		enet_peer_reset(server);
 		return 0;
 	}
 
+	std::cout << "succeed\n";
 	return true;
 }
 
@@ -180,9 +199,20 @@ void msgLoop(ENetHost *client)
 				size_t size = {};
 				auto data = parsePacket(event, p, size);
 
+
+				if (p.header == headerReceiveMapData) {
+					if (p.cid == 100000) {
+						map = ruins;
+					}
+					else if (p.cid == 100001) {
+						map = field;
+					}
+					else if (p.cid == 100002) {
+						map = facility;
+					}
+				}
 				if (p.header == headerAnounceConnection)
 				{
-
 					players[p.cid] = *(phisics::Entity*)data;
 
 				}else if (p.header == headerUpdateConnection)
@@ -216,6 +246,7 @@ void msgLoop(ENetHost *client)
 							sendPlayerData(player, true);
 							deaths++;
 							hasAk = false;
+							hasGlock = true;
 						}
 
 					}
@@ -288,8 +319,9 @@ void msgLoop(ENetHost *client)
 			case ENET_EVENT_TYPE_DISCONNECT:
 			{
 				//std::cout << "disconect\n";
-				exit(0);
-
+				//exit(0);
+				isConnected = false;
+				joined = false;
 				break;
 			}
 		}
@@ -325,39 +357,49 @@ void closeFunction()
 }
 
 
-void clientFunction(float deltaTime, gl2d::Renderer2D &renderer, Textures textures, std::string ip, std::string port, char *playerName)
+bool clientFunction(float deltaTime, gl2d::Renderer2D &renderer, Textures textures, std::string ip, std::string port, char *playerName)
 {
 
 	if (!joined)
 	{
+		
 		if (!client)
 		{
 			client = enet_host_create(nullptr, 1, 1, 0, 0);
 		}
-
-		if (connectToServer(client, server, cid, ip, port, playerName))
+		try
 		{
-			joined = true;
+			if (connectToServer(client, server, cid, ip, port, playerName))
+			{
+				joined = true;
+				isConnected = true;
+			}
+			else {
+				throw 1;
+			}
+		}
+		catch (const int code) {
+			return false;
 		}
 	}
 	else
 	{
 
 		msgLoop(client);
-
+		if (!isConnected) return false;
 		auto &player = players[cid];
 
 	#pragma region input
 		static int pillBoost = 0;
 
 		if (hasPills) {
-			pillBoost = 200;
+			pillBoost = 500;
 		}
 
 		if (pillBoost > 0) 
 		{
 			hasPills = false;
-			playerSpeed = 15;
+			playerSpeed = 13;
 			pillBoost--;
 		}
 		else {
@@ -408,7 +450,7 @@ void clientFunction(float deltaTime, gl2d::Renderer2D &renderer, Textures textur
 			platform::setFullScreen(!platform::isFullScreen());
 		}
 		
-		if (platform::isKeyPressedOn(platform::Button::Escape))
+		if (platform::isKeyPressedOn(platform::Button::Escape) && platform::isKeyPressedOn(platform::Button::L))
 		{
 			Packet p;
 			p.cid = cid;
@@ -418,7 +460,7 @@ void clientFunction(float deltaTime, gl2d::Renderer2D &renderer, Textures textur
 		}
 
 		auto mousePos = platform::getRelMousePosition();
-		renderer.renderText(mousePos, ".", textures.font, Colors_Black);
+		//renderer.renderText(mousePos, ".", textures.font, Colors_Black);
 		static float culldown = 0;
 		static float culldownTime = 0.3;
 		static int bateryShooting = 0;
@@ -585,7 +627,7 @@ void clientFunction(float deltaTime, gl2d::Renderer2D &renderer, Textures textur
 			}
 
 			renderer.currentCamera.follow(player.pos * worldMagnification, deltaTime * 5, 3, renderer.windowW, renderer.windowH);
-			renderer.currentCamera.clip(glm::vec2(map.w, map.h) *worldMagnification, {renderer.windowW, renderer.windowH});
+			//renderer.currentCamera.clip(glm::vec2(map.w, map.h) *worldMagnification, {renderer.windowW, renderer.windowH});
 
 			map.render(renderer, textures.sprites);
 
@@ -655,7 +697,7 @@ void clientFunction(float deltaTime, gl2d::Renderer2D &renderer, Textures textur
 			}
 		}
 
-
+		bool killInced = false;
 		for (int i = 0; i < ownBullets.size(); i++)
 		{
 			ownBullets[i].updateMove(deltaTime * bulletSpeed);
@@ -674,7 +716,8 @@ void clientFunction(float deltaTime, gl2d::Renderer2D &renderer, Textures textur
 						p.header = headerRegisterHit;
 						p.cid = cid;
 						sendPacket(server, p, (const char*)&e.first, sizeof(int32_t), true, 1);
-						if (e.second.life == 1) {
+						if (e.second.life == 1 && !killInced) {
+							killInced = true;
 							kills++;
 							platform::Message msg;
 							msg.alpha = 255;
@@ -776,7 +819,7 @@ void clientFunction(float deltaTime, gl2d::Renderer2D &renderer, Textures textur
 
 		}
 	#pragma endregion
-
+		return true;
 
 
 

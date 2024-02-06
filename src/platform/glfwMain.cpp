@@ -275,6 +275,8 @@ namespace platform
 };
 #pragma endregion
 
+FILE* out;
+FILE* err;
 
 int main()
 {
@@ -295,17 +297,19 @@ int main()
 #pragma region window and opengl
 
 	AllocConsole();
-	(void)freopen("conin$", "r", stdin);
-	(void)freopen("conout$", "w", stdout);
-	(void)freopen("conout$", "w", stderr);
-	std::cout.sync_with_stdio();
+	freopen("conin$", "r", stdin);
+	freopen("conout$", "w", stdout);
+	freopen("conout$", "w", stderr);
+	printf("Debugging Window:\n");
+
+	std::cout << "2\n";
 
 	permaAssertComment(glfwInit(), "err initializing glfw");
 	glfwWindowHint(GLFW_SAMPLES, 4);
 
 	int w = 500;
 	int h = 500;
-	wind = glfwCreateWindow(w, h, "geam", nullptr, nullptr);
+	wind = glfwCreateWindow(w, h, "BloodBox Build 0", nullptr, nullptr);
 	glfwMakeContextCurrent(wind);
 	glfwSwapInterval(1);
 

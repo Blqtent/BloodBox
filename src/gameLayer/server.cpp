@@ -124,8 +124,21 @@ void addConnection(ENetHost *server, ENetEvent &event)
 	p.cid = pids;
 
 	pids++;
-	//send own cid
+	//send new cid
 	sendPacket(event.peer, p, (const char*)&color, sizeof(color), true, 0);
+
+	Packet p2;
+	p2.header = headerReceiveMapData;
+
+	if (dat::map == "ruins")
+		p2.cid = 100000;
+	else if (dat::map == "field")
+		p2.cid = 100001;
+	else if (dat::map == "facility")
+		p2.cid = 100002;
+
+	//send map
+	sendPacket(event.peer, p2, (const char*)dat::map.c_str(), sizeof(dat::map.c_str()), true, 0);
 
 	//send other players
 	for (auto it = connections.begin(); it != connections.end(); it++)
@@ -250,7 +263,7 @@ void recieveData(ENetHost *server, ENetEvent &event)
 	
 	else if (p.header == headerRequestDisconnect)
 	{
-		//removeConnection(server, event);
+		removeConnection(server, event);
 	}
 
 

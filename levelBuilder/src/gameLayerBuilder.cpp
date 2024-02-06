@@ -25,14 +25,14 @@ phisics::MapData map;
 bool initGame()
 {
 	renderer.create();
-	sprites.loadFromFileWithPixelPadding(RESOURCES_PATH "jawbreaker_tiles.png", tiles::pixelSize, true, true);
+	sprites.loadFromFileWithPixelPadding("./resources/jawbreaker_tiles.png", tiles::pixelSize, true, true);
 
-	if(!platform::readEntireFile(RESOURCES_PATH "builderData.data", &gameData, sizeof(GameData)))
+	if(!platform::readEntireFile(RESOURCES_PATH "./resources/builderData.data", &gameData, sizeof(GameData)))
 	{
 		gameData = GameData();
 	}
 
-	if (!map.load(RESOURCES_PATH "mapData2.bin"))
+	if (!map.load("./resources/mapData2.bin"))
 	{
 		char mapInfo[50 * 50] = {};
 		//for (int i = 0; i < sizeof(mapInfo); i++)
@@ -237,8 +237,8 @@ bool gameLogic(float deltaTime)
 void closeGame()
 {
 
-	platform::writeEntireFile(RESOURCES_PATH "gameData.data", &gameData, sizeof(GameData));
+	platform::writeEntireFile("./resources/gameData.data", &gameData, sizeof(GameData));
 
-	map.save(RESOURCES_PATH "mapData2.bin");
+	map.save("./resources/mapData2.bin");
 
 }

@@ -52,6 +52,8 @@ bool gameLogic(float deltaTime)
 	renderer.clearScreen();
 #pragma endregion
 
+	//std::cout <
+	// < "3\n";
 
 	//0 main menu
 	//1 client
@@ -64,18 +66,29 @@ bool gameLogic(float deltaTime)
 
 	if (state == 0)
 	{
-		glui::Text("Shtr: Gunplay", Colors_Blue);
+		glui::Begin(1);
+		glui::Text("BloodBox", Colors_Blue);
 		glui::Text(" ", Colors_Blue);
 		glui::Text("Enter your name:", Colors_White);
 
 		glui::InputText("Enter name##1", name, sizeof(name));
 		
-		glui::BeginMenu("Host server", glm::vec4(0, 0, 0, 0), {});
+		glui::BeginMenu("Host server", Colors_White, {});
 			
-			glui::Toggle(headless == true ? "Headless: Enabled" : "Headless: Disabled", glm::vec4(0, 0, 0, 0), &headless);
+			glui::Toggle(headless == true ? "Headless: Enabled" : "Headless: Disabled", { 0, 0, 0, 0 }, &headless);
+			glui::BeginMenu("Choose Map", Colors_White, {});
+				if (glui::Button("Ruins", Colors_White)) {
+					dat::map = "ruins";
+				}
+				if (glui::Button("Field", Colors_White)) {
+					dat::map = "field";
+				}
+				if (glui::Button("Facility", Colors_White)) {
+					dat::map = "facility";
+				}
+			glui::EndMenu();
 
-
-			if (glui::Button("start", glm::vec4(0, 0, 0, 0)))
+			if (glui::Button("start", Colors_White))
 			{
 				std::thread t(serverFunction);
 				t.detach();
@@ -83,28 +96,33 @@ bool gameLogic(float deltaTime)
 				state = 2;
 			}
 		glui::EndMenu();
-		glui::BeginMenu("Join server", glm::vec4(0, 0, 0, 0), {});
+		glui::BeginMenu("Join server", Colors_White, {});
 			glui::Text("enter ip: ", Colors_White);
 			glui::InputText("input ip", ip, sizeof(ip));
-			if (glui::Button("join", glm::vec4(0, 0, 0, 0)))
+			if (glui::Button("join", Colors_White))
 			{
 				resetClient();
 				state = 1;
 			}
 		glui::EndMenu();
 		
-		glui::BeginMenu("Options", glm::vec4(0, 0, 0, 0), {});
-			glui::Toggle(platform::autopickup == true ? "Autopickup: Enabled" : "Autopickup: Disabled", glm::vec4(0, 0, 0, 0), &platform::autopickup);
+		glui::BeginMenu("Options", Colors_White, {});
+			glui::Text("Options:", Colors_White);
+			glui::Text("WASD to move", Colors_White);
+			glui::Text("F to pickup", Colors_White);
+			glui::Text("E to use", Colors_White);
+			glui::Text("Ctrl + Esc to exit server", Colors_White);
+			glui::Toggle(platform::autopickup == true ? "Autopickup: Enabled" : "Autopickup: Disabled", {0, 0, 0, 0}, &platform::autopickup);
 			glui::Text("enter port: ", Colors_White);
 
 			glui::InputText("input Port", port, sizeof(port));
 		glui::EndMenu();
 
-		if (glui::Button("Exit", glm::vec4(0, 0, 0, 0)))
+		if (glui::Button("Exit", Colors_Red))
 		{
 			return 0;
 		}
-
+		glui::End();
 		glui::renderFrame(renderer, textures.font, platform::getRelMousePosition(),
 			platform::isLMousePressed(), platform::isLMouseHeld(), platform::isLMouseReleased(),
 			platform::isKeyReleased(platform::Button::Escape), platform::getTypedInput(), deltaTime);
@@ -112,7 +130,9 @@ bool gameLogic(float deltaTime)
 	}
 	else if (state == 1)
 	{
-		clientFunction(deltaTime, renderer, textures, ip, port, name);
+		if (!clientFunction(deltaTime, renderer, textures, ip, port, name)) {
+			state = 0;
+		}
 	}
 	else if (state == 2)
 	{

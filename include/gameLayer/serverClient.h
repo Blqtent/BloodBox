@@ -2,12 +2,13 @@
 #include <enet/enet.h>
 #include <gl2d/gl2d.h>
 #include "phisics.h"
+#include <string>
 
 struct Textures;
 
 void serverFunction();
 
-void clientFunction(float deltaTime, gl2d::Renderer2D &renderer, Textures textures, std::string ip, std::string port, char *playerName);
+bool clientFunction(float deltaTime, gl2d::Renderer2D &renderer, Textures textures, std::string ip, std::string port, char *playerName);
 void resetClient();
 void closeFunction();
 void closeServer();
@@ -26,3 +27,7 @@ struct Textures
 
 	gl2d::Font font;
 };
+
+namespace dat {
+	inline std::string map;
+}
