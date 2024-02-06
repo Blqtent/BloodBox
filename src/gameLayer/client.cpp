@@ -620,7 +620,10 @@ bool clientFunction(float deltaTime, gl2d::Renderer2D &renderer, Textures textur
 				glm::vec2 dir = i.second.input;
 				if (dir.x != 0 || dir.y != 0)
 				{
-					i.second.move(glm::normalize(dir) * speed);
+					if (map.get(i.second.pos.x, i.second.pos.y).willSlow())
+						i.second.move(glm::normalize(dir) * (float)(speed * 0.5));
+					else 
+						i.second.move(glm::normalize(dir) * speed);
 				}
 				i.second.resolveConstrains(map);
 				i.second.updateMove(deltaTime);

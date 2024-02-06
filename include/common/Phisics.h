@@ -20,6 +20,8 @@ namespace phisics
 		char type;
 		
 		bool isCollidable();
+		bool willSlow();
+		bool canPass();
 	};
 	
 	struct MapData

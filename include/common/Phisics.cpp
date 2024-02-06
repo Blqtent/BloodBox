@@ -1,6 +1,7 @@
 #include "Phisics.h"
 #include <safeSave.h>
 #include <chrono>
+#include <iostream>
 
 namespace phisics
 {
@@ -208,7 +209,7 @@ namespace phisics
 		for (int y = minY; y < maxY; y++)
 			for (int x = minX; x < maxX; x++)
 			{
-				if (mapData.get(x, y).isCollidable())
+				if (mapData.get(x, y).isCollidable() || mapData.get(x, y).canPass())
 				{
 					if (aabb({ pos,dimensions }, { x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE }, 0.0001f))
 					{
@@ -257,19 +258,25 @@ namespace phisics
 	void MapData::create(int w, int h, const char* d)
 	{
 		cleanup();
+		std::cout << "Cleanup\n";
 
 		this->w = w;
 		this->h = h;
 
 		data = new BlockInfo[w * h];
 
+		std::cout << "BlockInfo\n";
+
+
 		if (d)
 		{
 			for (int i = 0; i < w * h; i++)
 			{
 				data[i].type = d[i];
+				//std::cout << i << "\n";
 
 			}
+			std::cout << "Done\n";
 		}
 
 	}
@@ -344,6 +351,17 @@ namespace phisics
 	{
 		return tiles::isSolid(type);
 	}
+	
+	bool BlockInfo::willSlow()
+	{
+		return tiles::willSlow(type);
+	}
+
+	bool BlockInfo::canPass()
+	{
+		return tiles::canBulletPass(type);
+
+	}
 
 	bool Bullet::checkCollisionMap(MapData &mapData)
 	{
@@ -380,7 +398,7 @@ namespace phisics
 		for (int y = minY; y < maxY; y++)
 			for (int x = minX; x < maxX; x++)
 			{
-				if (mapData.get(x, y).isCollidable())
+				if (mapData.get(x, y).isCollidable() && !mapData.get(x, y).canPass())
 				{
 					if (aabb(transform, {x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE}, 0.0001f))
 					{

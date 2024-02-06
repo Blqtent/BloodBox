@@ -11,6 +11,7 @@ gl2d::Renderer2D renderer;
 
 gl2d::Font font;
 gl2d::Texture sprites;
+int wi = 50; int hi = 50;
 
 struct GameData
 {
@@ -31,17 +32,6 @@ bool initGame()
 	{
 		gameData = GameData();
 	}
-
-	if (!map.load("./resources/mapData2.bin"))
-	{
-		char mapInfo[50 * 50] = {};
-		//for (int i = 0; i < sizeof(mapInfo); i++)
-		//{
-		//}
-
-		map.create(50, 50, mapInfo);
-	}
-	
 
 	return true;
 }
@@ -95,6 +85,7 @@ bool gameLogic(float deltaTime)
 	
 #pragma region mouse picking
 
+
 	auto mousePos = platform::getRelMousePosition();
 	mousePos += renderer.currentCamera.position;
 	mousePos /= worldMagnification;
@@ -103,108 +94,144 @@ bool gameLogic(float deltaTime)
 
 	static char currentBlock = 0;
 	bool inImgui = 0;
-
-	ImGui::Begin("Block picker");
+	static bool init = false;
+	static int t = 0;
+	if (!map.load("./resources/mapData2.bin"))
 	{
-		bool collidable = true;
-		bool nonCollidable = true;
-
-		ImGui::Checkbox("Show Collidable Blocks", &collidable);
-		ImGui::Checkbox("Show Non-Collidable Blocks", &nonCollidable);
-		ImGui::Text("MousePos: %d, %d", mousePos.x, mousePos.y);
-
-		unsigned short mCount = 0;
-		ImGui::BeginChild("Block Selector");
-		bool inImgui = ImGui::IsWindowHovered();
-
-		if (collidable && nonCollidable)
-		{
-			unsigned short localCount = 0;
-			while (mCount < tiles::tilesCount)
-			{
-				auto uv = tiles::getTileUV(mCount);
-
-				ImGui::PushID(mCount);
-				if (ImGui::ImageButton((void *)(intptr_t)sprites.id,
-					{35,35}, {uv.x, uv.y}, {uv.z, uv.w}))
-				{
-					currentBlock = mCount;
-				}
-				ImGui::PopID();
-
-				if (localCount % 10 != 0)
-				{
-					ImGui::SameLine();
-				}
-				localCount++;
-
-				mCount++;
-			}
-		}
-		else
-		{
-			if (collidable && !nonCollidable)
-			{
-				unsigned short localCount = 0;
-				while (mCount < tiles::tilesCount)
-				{
-					if (tiles::isSolid(mCount))
-					{
-						auto uv = tiles::getTileUV(mCount);
-
-						ImGui::PushID(mCount);
-						if (ImGui::ImageButton((void *)(intptr_t)sprites.id,
-							{35,35}, {uv.x, uv.y}, {uv.z, uv.w}));
-						{
-							currentBlock = mCount;
-						}
-						ImGui::PopID();
-
-						if (localCount % 10 != 0)
-						{
-							ImGui::SameLine();
-						}
-						localCount++;
-
-					}
-					mCount++;
-				}
-			}
-			else if (!collidable && nonCollidable)
-			{
-				unsigned short localCount = 0;
-				while (mCount < tiles::tilesCount)
-				{
-					if (!tiles::isSolid(mCount))
-					{
-						auto uv = tiles::getTileUV(mCount);
-
-						ImGui::PushID(mCount);
-						if (ImGui::ImageButton((void *)(intptr_t)sprites.id,
-							{35,35}, {uv.x, uv.y}, {uv.z, uv.w}));
-						{
-							currentBlock = mCount;
-						}
-						ImGui::PopID();
-
-						if (localCount % 10 != 0)
-						{
-							ImGui::SameLine();
-						}
-						localCount++;
-
-					}
-					mCount++;
-				}
-			}
-		}
-		ImGui::EndChild();
-
-
 
 	}
-	ImGui::End();
+	else {
+		init = true;
+	}
 
+	if (!init) {
+		ImGui::Begin("Init");
+		{
+
+			ImGui::Combo("World Type", &t, "Grass 50x50\0Sand 50x50", 2);
+
+			if (ImGui::Button("Apply")) {
+				if (t == 0) {
+					char mapInfo[50 * 50] = {};
+
+					map.create(50, 50, mapInfo);
+				}
+				else if (t == 1)
+				{
+					char mapInfo[50 * 50] = {};
+					for (int i = 0; i < sizeof(mapInfo); i++)
+					{
+						mapInfo[i] = 80;
+					}
+					map.create(50, 50, mapInfo);
+				}
+				init = true;
+			}
+		}
+	}
+	else {
+
+		ImGui::Begin("Block picker");
+		{
+			bool collidable = true;
+			bool nonCollidable = true;
+
+			ImGui::Checkbox("Show Collidable Blocks", &collidable);
+			ImGui::Checkbox("Show Non-Collidable Blocks", &nonCollidable);
+			ImGui::Text("MousePos: %d, %d", mousePos.x, mousePos.y);
+
+			unsigned short mCount = 0;
+			ImGui::BeginChild("Block Selector");
+			bool inImgui = ImGui::IsWindowHovered();
+
+			if (collidable && nonCollidable)
+			{
+				unsigned short localCount = 0;
+				while (mCount < tiles::tilesCount)
+				{
+					auto uv = tiles::getTileUV(mCount);
+
+					ImGui::PushID(mCount);
+					if (ImGui::ImageButton((void*)(intptr_t)sprites.id,
+						{ 35,35 }, { uv.x, uv.y }, { uv.z, uv.w }))
+					{
+						currentBlock = mCount;
+					}
+					ImGui::PopID();
+
+					if (localCount % 10 != 0)
+					{
+						ImGui::SameLine();
+					}
+					localCount++;
+
+					mCount++;
+				}
+			}
+			else
+			{
+				if (collidable && !nonCollidable)
+				{
+					unsigned short localCount = 0;
+					while (mCount < tiles::tilesCount)
+					{
+						if (tiles::isSolid(mCount))
+						{
+							auto uv = tiles::getTileUV(mCount);
+
+							ImGui::PushID(mCount);
+							if (ImGui::ImageButton((void*)(intptr_t)sprites.id,
+								{ 35,35 }, { uv.x, uv.y }, { uv.z, uv.w }));
+							{
+								currentBlock = mCount;
+							}
+							ImGui::PopID();
+
+							if (localCount % 10 != 0)
+							{
+								ImGui::SameLine();
+							}
+							localCount++;
+
+						}
+						mCount++;
+					}
+				}
+				else if (!collidable && nonCollidable)
+				{
+					unsigned short localCount = 0;
+					while (mCount < tiles::tilesCount)
+					{
+						if (!tiles::isSolid(mCount))
+						{
+							auto uv = tiles::getTileUV(mCount);
+
+							ImGui::PushID(mCount);
+							if (ImGui::ImageButton((void*)(intptr_t)sprites.id,
+								{ 35,35 }, { uv.x, uv.y }, { uv.z, uv.w }));
+							{
+								currentBlock = mCount;
+							}
+							ImGui::PopID();
+
+							if (localCount % 10 != 0)
+							{
+								ImGui::SameLine();
+							}
+							localCount++;
+
+						}
+						mCount++;
+					}
+				}
+			}
+			ImGui::EndChild();
+
+
+
+		}
+		ImGui::End();
+	}
 	if (!inImgui && platform::isLMouseHeld())
 	{
 		if (platform::isKeyHeld(platform::Button::LeftCtrl))
