@@ -11,9 +11,8 @@ namespace tiles
 		"XXXXXXXX"
 		"------XX"
 		"--------"
-		"--------"
+		"--I-----"
 		"--XX--XX"
-
 		"--------"
 		"---SSSSS"
 		"SSS-----"
@@ -36,6 +35,12 @@ namespace tiles
 	bool willSlow(int id)
 	{
 		return(collisionMap[id] == 'S');
+
+	}
+	
+	bool canSpawnItem(int id)
+	{
+		return(collisionMap[id] == 'I');
 
 	}
 

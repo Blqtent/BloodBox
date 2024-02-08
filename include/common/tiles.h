@@ -12,6 +12,7 @@ namespace tiles
 	bool isSolid(int id);
 	bool canBulletPass(int id);
 	bool willSlow(int id);
+	bool canSpawnItem(int id);
 	glm::vec4 getTileUV(int id);
 	
 

@@ -86,6 +86,10 @@ bool gameLogic(float deltaTime)
 				if (glui::Button("Facility", Colors_White)) {
 					dat::map = "facility";
 				}
+				if (glui::Button("Outcast", Colors_White)) {
+					dat::map = "outcast";
+				}
+
 			glui::EndMenu();
 
 			if (glui::Button("start", Colors_White))
@@ -111,7 +115,7 @@ bool gameLogic(float deltaTime)
 			glui::Text("WASD to move", Colors_White);
 			glui::Text("F to pickup", Colors_White);
 			glui::Text("E to use", Colors_White);
-			glui::Text("Ctrl + Esc to exit server", Colors_White);
+			glui::Text("Esc to exit server", Colors_White);
 			glui::Toggle(platform::autopickup == true ? "Autopickup: Enabled" : "Autopickup: Disabled", {0, 0, 0, 0}, &platform::autopickup);
 			glui::Text("enter port: ", Colors_White);
 

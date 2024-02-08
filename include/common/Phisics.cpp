@@ -100,7 +100,7 @@ namespace phisics
 
 	void Entity::move(glm::vec2 dir)
 	{
-
+		//std::cout << "Moved\n";
 		pos += dir;
 
 	}
@@ -258,14 +258,14 @@ namespace phisics
 	void MapData::create(int w, int h, const char* d)
 	{
 		cleanup();
-		std::cout << "Cleanup\n";
+		//std::cout << "Cleanup\n";
 
 		this->w = w;
 		this->h = h;
 
 		data = new BlockInfo[w * h];
 
-		std::cout << "BlockInfo\n";
+	//	std::cout << "BlockInfo\n";
 
 
 		if (d)
@@ -276,7 +276,7 @@ namespace phisics
 				//std::cout << i << "\n";
 
 			}
-			std::cout << "Done\n";
+			//std::cout << "Done\n";
 		}
 
 	}
@@ -360,6 +360,12 @@ namespace phisics
 	bool BlockInfo::canPass()
 	{
 		return tiles::canBulletPass(type);
+
+	}
+
+	bool BlockInfo::canSpawnItem()
+	{
+		return tiles::canSpawnItem(type);
 
 	}
 

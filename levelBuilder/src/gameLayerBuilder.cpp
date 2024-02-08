@@ -94,15 +94,18 @@ bool gameLogic(float deltaTime)
 
 	static char currentBlock = 0;
 	bool inImgui = 0;
-	static bool init = false;
+	static bool init;
 	static int t = 0;
-	if (!map.load("./resources/mapData2.bin"))
-	{
+	if (!init) {
+		if (map.load("./resources/mapData2.bin"))
+		{
+			init = true;
+		}
+		else {
+			init = false;
+		}
+	}
 
-	}
-	else {
-		init = true;
-	}
 
 	if (!init) {
 		ImGui::Begin("Init");

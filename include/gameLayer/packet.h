@@ -25,7 +25,9 @@ enum
 	headerSpawnItem,			//contains itemData
 	headerPickupItem,			//contains itemId, when recieved by client contains full item data
 	headerServerMessage,
-	headerRequestDisconnect		
+	headerRequestDisconnect,		
+	headerSendInput,
+	headerPos
 };
 
 constexpr int SERVER_CHANNELS = 2;

@@ -513,7 +513,7 @@ namespace glui
 	void renderFrame(gl2d::Renderer2D& renderer, gl2d::Font& font, glm::ivec2 mousePos, bool mouseClick,
 		bool mouseHeld, bool mouseReleased, bool escapeReleased, const std::string& typedInput, float deltaTime)
 	{
-		std::cout << "RenderFrame\n";
+		//std::cout << "RenderFrame\n";
 		if (!idWasSet)
 		{
 			return;

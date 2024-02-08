@@ -10,6 +10,8 @@
 phisics::MapData ruins;
 phisics::MapData field;
 phisics::MapData facility;
+phisics::MapData outcast;
+phisics::MapData lake;
 
 phisics::MapData map;
 ENetPeer *server = {};
@@ -62,6 +64,11 @@ void resetClient()
 	{
 		return;
 	}
+	if (!outcast.load(RESOURCES_PATH "outcast.bin"))
+	{
+		return;
+	}
+
 	if (!map.load(RESOURCES_PATH "empty.bin"))
 	{
 		return;
@@ -123,6 +130,7 @@ bool connectToServer(ENetHost *&client, ENetPeer *&server, int32_t &cid, std::st
 		std::cout << "Attempt failed\n";
 		return false;
 	}
+	std::cout << "Connect2\n";
 
 	//see if we got events by server
 	//client, event, ms to wait(0 means that we don't wait)
@@ -210,14 +218,17 @@ void msgLoop(ENetHost *client)
 					else if (p.cid == 100002) {
 						map = facility;
 					}
+					else if (p.cid == 100003) {
+						map = outcast;
+					}
 				}
-				if (p.header == headerAnounceConnection)
+				else if (p.header == headerAnounceConnection)
 				{
 					players[p.cid] = *(phisics::Entity*)data;
-
-				}else if (p.header == headerUpdateConnection)
+				}
+				else if (p.header == headerUpdateConnection)
 				{
-
+					//std::cout << "Update connection recieved\n";
 					players[p.cid] = *(phisics::Entity *)data;
 
 				}else if (p.header == headerAnounceDisconnect)
@@ -359,7 +370,7 @@ void closeFunction()
 
 bool clientFunction(float deltaTime, gl2d::Renderer2D &renderer, Textures textures, std::string ip, std::string port, char *playerName)
 {
-
+	phisics::deltaTime = deltaTime;
 	if (!joined)
 	{
 		
@@ -394,6 +405,7 @@ bool clientFunction(float deltaTime, gl2d::Renderer2D &renderer, Textures textur
 
 		if (hasPills) {
 			pillBoost = 500;
+			player.isBoosted = true;
 		}
 
 		if (pillBoost > 0) 
@@ -404,6 +416,7 @@ bool clientFunction(float deltaTime, gl2d::Renderer2D &renderer, Textures textur
 		}
 		else {
 			playerSpeed = 10;
+			player.isBoosted = false;
 		}
 
 		float speed = playerSpeed * deltaTime;
@@ -450,7 +463,7 @@ bool clientFunction(float deltaTime, gl2d::Renderer2D &renderer, Textures textur
 			platform::setFullScreen(!platform::isFullScreen());
 		}
 		
-		if (platform::isKeyPressedOn(platform::Button::Escape) && platform::isKeyPressedOn(platform::Button::L))
+		if (platform::isKeyPressedOn(platform::Button::Escape))
 		{
 			Packet p;
 			p.cid = cid;
@@ -614,7 +627,7 @@ bool clientFunction(float deltaTime, gl2d::Renderer2D &renderer, Textures textur
 			}
 
 			player.input = {posx, posy};
-
+			
 			for (auto &i : players)
 			{
 				glm::vec2 dir = i.second.input;
@@ -622,13 +635,13 @@ bool clientFunction(float deltaTime, gl2d::Renderer2D &renderer, Textures textur
 				{
 					if (map.get(i.second.pos.x, i.second.pos.y).willSlow())
 						i.second.move(glm::normalize(dir) * (float)(speed * 0.5));
-					else 
+					else
 						i.second.move(glm::normalize(dir) * speed);
 				}
 				i.second.resolveConstrains(map);
 				i.second.updateMove(deltaTime);
 			}
-
+			
 			renderer.currentCamera.follow(player.pos * worldMagnification, deltaTime * 5, 3, renderer.windowW, renderer.windowH);
 			//renderer.currentCamera.clip(glm::vec2(map.w, map.h) *worldMagnification, {renderer.windowW, renderer.windowH});
 

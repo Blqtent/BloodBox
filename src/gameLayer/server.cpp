@@ -8,6 +8,8 @@
 #include <chrono>
 #include <iostream>
 
+phisics::MapData mep;
+
 struct Client
 {
 	ENetPeer *peer = {};
@@ -17,22 +19,10 @@ struct Client
 };
 
 
-std::vector<glm::ivec2> itemSpawnPosition =
-{
-	{22,12},
-	{44,17},
-	{31,32},
-	{16,45},
-	{39,28},
-	{11,23},
-	{25,5},
-	{27,46},
-	{22,27},
-	{35,35},
-};
+std::vector<glm::ivec2> itemSpawnPosition;
 
 std::vector<phisics::Item> items;
-constexpr int maxItems = 6;
+constexpr int maxItems = 10;
 std::unordered_map<int32_t, Client> connections;
 
 void broadCast(Packet p, void *data, size_t size, ENetPeer *peerToIgnore, bool reliable, int channel)
@@ -51,6 +41,18 @@ void broadCast(Packet p, void *data, size_t size, ENetPeer *peerToIgnore, bool r
 void spawnItem()
 {
 	static int itemsIds = 1;
+	std::cout << "Spawn Item\n";
+
+	//if (itemSpawnPosition.empty()) {
+	
+
+	
+	for (auto i : itemSpawnPosition) {
+		std::cout << i.x << " " << i.y << "\n";
+	}
+
+	//}
+
 	int i = rand() % itemSpawnPosition.size();
 	auto pos = itemSpawnPosition[i];
 	itemSpawnPosition.erase(itemSpawnPosition.begin() + i);
@@ -66,6 +68,38 @@ void spawnItem()
 	broadCast(p, &item, sizeof(item), nullptr, true, 1);
 }
 
+/*
+	void spawnItem()
+{
+	static int itemsIds = 1;
+
+	if (itemSpawnPosition.empty()) {
+		for (int y = 0; y < mep.h; y++) {
+			for (int x = 0; x < mep.w; x++)
+			{
+				if (mep.get(x, y).canSpawnItem()) {
+					itemSpawnPosition.push_back({ x, y });
+					std::cout << "E\n";
+				}
+			}
+		}
+	}
+
+	int i = rand() % itemSpawnPosition.size();
+	auto pos = itemSpawnPosition[i];
+	itemSpawnPosition.erase(itemSpawnPosition.begin() + i);
+
+	auto item = phisics::Item(pos, itemsIds++, rand()%phisics::itemsCount + 1);
+
+	items.push_back(item);
+
+	Packet p;
+	p.cid = 0;
+	p.header = headerSpawnItem;
+
+	broadCast(p, &item, sizeof(item), nullptr, true, 1);
+}
+*/
 
 bool pickupItem(uint32_t itemId, phisics::Item &item)
 {
@@ -131,11 +165,25 @@ void addConnection(ENetHost *server, ENetEvent &event)
 	p2.header = headerReceiveMapData;
 
 	if (dat::map == "ruins")
+	{
 		p2.cid = 100000;
+		//mep.load(RESOURCES_PATH "ruins.bin");
+	}
 	else if (dat::map == "field")
+	{
 		p2.cid = 100001;
+		//mep.load(RESOURCES_PATH "field.bin");
+	}
 	else if (dat::map == "facility")
+	{
 		p2.cid = 100002;
+		//mep.load(RESOURCES_PATH "facility.bin");
+	}
+	else if (dat::map == "outcast")
+	{
+		p2.cid = 100003;
+		//mep.load(RESOURCES_PATH "outcast.bin");
+	}
 
 	//send map
 	sendPacket(event.peer, p2, (const char*)dat::map.c_str(), sizeof(dat::map.c_str()), true, 0);
@@ -238,6 +286,19 @@ void recieveData(ENetHost *server, ENetEvent &event)
 		broadCast(sPacket, data, size, event.peer, true, 1);
 
 	}
+	else if (p.header == headerSendInput)
+	{
+/*		phisics::input in;
+		in = *(phisics::input*)data;
+
+		glm::vec3 newpos;
+
+		Packet sPacket;
+		sPacket.header = headerPos;
+		sPacket.cid = p.cid;
+		broadCast(sPacket, data, size, event.peer, true, 1);*/
+
+	}
 	else if (p.header == headerRegisterHit)
 	{
 		Packet sPacket;
@@ -287,7 +348,42 @@ void closeServer()
 
 void serverFunction()
 {
-
+	if (dat::map == "ruins")
+	{
+		//p2.cid = 100000;
+		mep.load(RESOURCES_PATH "ruins.bin");
+	}
+	else if (dat::map == "field")
+	{
+		//p2.cid = 100001;
+		mep.load(RESOURCES_PATH "field.bin");
+	}
+	else if (dat::map == "facility")
+	{
+		//p2.cid = 100002;
+		mep.load(RESOURCES_PATH "facility.bin");
+	}
+	else if (dat::map == "outcast")
+	{
+		//p2.cid = 100003;
+		mep.load(RESOURCES_PATH "outcast.bin");
+	}
+	else {
+		mep.load(RESOURCES_PATH "empty.bin");
+	}
+	std::cout << "Server Tick\n";
+	if (itemSpawnPosition.empty()) {
+		std::cout << "E2\n";
+		for (int ay = 0; ay < mep.h; ay++) {
+			for (int ax = 0; ax < mep.w; ax++)
+			{
+				if (mep.get(ax, ay).canSpawnItem()) {
+					itemSpawnPosition.push_back({ ax, ay });
+					std::cout << "E\n";
+				}
+			}
+		}
+	}
 	std::srand(std::time(0));
 	serverOpen = true;
 
@@ -304,6 +400,7 @@ void serverFunction()
 		std::terminate();
 	}
 
+	auto stop = std::chrono::high_resolution_clock::now();
 
 	while (serverOpen)
 	{
@@ -337,17 +434,18 @@ void serverFunction()
 				}
 			}
 		}
+		
 
 		if (changedData)
 		{
 			for (auto p = connections.begin(); p != connections.end(); p++)
 			{
-				
+
 				if (!p->second.changed)
 				{
 					continue;
 				}
-				
+
 				p->second.changed = false;
 
 				Packet sPacket;
@@ -355,11 +453,11 @@ void serverFunction()
 				sPacket.cid = p->first;
 				broadCast(sPacket, &p->second.entityData, sizeof(phisics::Entity), p->second.peer, false, 0);
 			}
-			
+
 		}
 
 		changedData = false;
-		
+
 		float deltaTime = 0.f;
 		{
 			static auto stop = std::chrono::high_resolution_clock::now();

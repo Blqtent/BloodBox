@@ -13,7 +13,14 @@ constexpr int playerNameSize = 10;
 
 namespace phisics
 {
-	
+	inline float deltaTime;
+	struct input {
+		bool left = false;
+		bool right = false;
+		bool up = false;
+		bool down = false;
+	};
+
 	struct BlockInfo
 	{
 		
@@ -22,6 +29,7 @@ namespace phisics
 		bool isCollidable();
 		bool willSlow();
 		bool canPass();
+		bool canSpawnItem();
 	};
 	
 	struct MapData
@@ -51,13 +59,13 @@ namespace phisics
 		glm::vec2 lastPos = {};
 		glm::vec2 input = {};
 
-		glm::vec2 dimensions = {0.9,0.9};
+		glm::vec2 dimensions = {0.8,0.8};
 		glm::vec3 color = {1,1,1};
-
+		bool isBoosted = false;
 		float hitTime = 0.f;
 		int life = maxLife;
 
-		static constexpr int maxLife = 5;
+		static constexpr int maxLife = 10;
 		static constexpr float invincibilityTime = 0.10;
 
 		void resolveConstrains(MapData& mapData);

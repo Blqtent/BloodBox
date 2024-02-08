@@ -396,7 +396,7 @@ int main()
 
 		float augmentedDeltaTime = deltaTime;
 		if (augmentedDeltaTime > 1.f / 10) { augmentedDeltaTime = 1.f / 10; }
-	
+		
 	#pragma endregion
 
 	#pragma region imgui
